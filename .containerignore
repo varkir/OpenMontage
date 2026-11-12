@@ -1,0 +1,11 @@
+.git
+.venv
+projects
+data
+output
+pipeline
+library
+remotion-composer/node_modules
+remotion-composer/out
+.env
+**/__pycache__
