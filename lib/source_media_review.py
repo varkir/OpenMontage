@@ -213,18 +213,27 @@ def _transcribe_if_available(
     if media_type not in ("video", "audio"):
         return None
 
+    # Plain text only, so the local VoiceStudio STT is preferred. The word-timed
+    # `transcriber` stays the source for captions, which need word timestamps.
+    transcriber = None
+    for name in ("voicestudio_stt", "transcriber"):
+        candidate = tool_registry.get(name)
+        if candidate and candidate.get_status().value == "available":
+            transcriber = candidate
+            break
+    if transcriber is None:
+        return None
+
     try:
-        transcriber = tool_registry.get("transcriber")
-        if transcriber and transcriber.get_status().value == "available":
-            result = transcriber.execute({"input_path": str(path)})
-            if result.success:
-                text = result.data.get("text", "")
-                if text:
-                    # Return summary, not full transcript
-                    words = text.split()
-                    if len(words) > 100:
-                        return f"{' '.join(words[:100])}... ({len(words)} words total)"
-                    return text
+        result = transcriber.execute({"input_path": str(path)})
+        if result.success:
+            text = result.data.get("text", "")
+            if text:
+                # Return summary, not full transcript
+                words = text.split()
+                if len(words) > 100:
+                    return f"{' '.join(words[:100])}... ({len(words)} words total)"
+                return text
     except Exception as e:
         logger.warning("Transcription failed for %s: %s", path, e)
 
