@@ -314,8 +314,9 @@ def create_app() -> FastAPI:
         return response
 
     # Loopback binding alone does not prevent browser DNS-rebinding requests.
+    allowed_hosts = [h.strip() for h in _os.environ.get("BACKLOT_ALLOWED_HOSTS", "127.0.0.1,localhost").split(",") if h.strip()]
     app.add_middleware(
-        TrustedHostMiddleware, allowed_hosts=["127.0.0.1", "localhost"], www_redirect=False,
+        TrustedHostMiddleware, allowed_hosts=allowed_hosts, www_redirect=False,
     )
     return app
 
